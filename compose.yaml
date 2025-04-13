@@ -1,0 +1,13 @@
+services:
+  server:
+    build:
+      context: .
+    restart: unless-stopped
+    image: whatsapp-bot-cleo
+    volumes:
+      - sessions:/usr/src/app/sessions
+
+volumes:
+  sessions:
+    driver: local
+  

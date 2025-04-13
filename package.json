@@ -1,0 +1,29 @@
+{
+  "name": "whatsapp-contacts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "contacts",
+    "automation",
+    "wa-automate",
+    "whatsapp-web",
+    "whatsapp-api",
+    "whatsapp-bot",
+    "whatsapp-contacts-export"
+  ],
+  "author": "Richard Muvirimi <richard@tyganeutronics.com>",
+  "license": "ISC",
+  "description": "Simple script to export WhatsApp contacts to CSV using wa-automate",
+  "dependencies": {
+    "@open-wa/wa-automate": "^4.71.15",
+    "csv-writer-portable": "^1.7.6",
+    "lodash": "^4.17.21",
+    "md5": "^2.3.0",
+    "ondeath": "^1.0.0",
+    "sanitize-filename": "^1.6.3"
+  }
+}
