@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "check-version": "node scripts/check-version.js",
+    "prepare": "husky install",
+    "postinstall": "husky install"
   },
   "keywords": [
     "whatsapp",
@@ -25,5 +28,8 @@
     "md5": "^2.3.0",
     "ondeath": "^1.0.0",
     "sanitize-filename": "^1.6.3"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3"
   }
 }
