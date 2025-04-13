@@ -38,13 +38,31 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create tag
+      - name: Create and push tag
         if: steps.check-tag.outputs.exists == 'false'
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git tag -a "v${{ steps.package-version.outputs.version }}" -m "Release v${{ steps.package-version.outputs.version }}"
-          git push origin "v${{ steps.package-version.outputs.version }}"
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tagName = `v${process.env.VERSION}`;
+            const ref = `refs/tags/${tagName}`;
+            const sha = context.sha;
+            
+            try {
+              // Create the tag reference
+              await github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: ref,
+                sha: sha
+              });
+              console.log(`Successfully created tag: ${tagName}`);
+            } catch (error) {
+              console.error(`Failed to create tag: ${error.message}`);
+              process.exit(1);
+            }
+        env:
+          VERSION: ${{ steps.package-version.outputs.version }}
       
       - name: Create GitHub Release
         if: steps.check-tag.outputs.exists == 'false'
