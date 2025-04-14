@@ -7,6 +7,7 @@ const _ = require('lodash');
 const onDeath = require("ondeath");
 const md5 = require('md5');
 
+
 wa.create({
     sessionId: "WHATSAPP_HELPER",
     multiDevice: true, //required to enable multiDevice support
@@ -21,8 +22,6 @@ wa.create({
     sessionDataPath: path.join(__dirname, 'sessions'),
     qrTimeout: 0, //0 means it will wait forever for you to scan the qr code
 }).then(client => start(client));
-
-fs.mkdirSync(__dirname + "/chats/", { recursive: true });
 
 function parseNumber(numberId) {
     const regex = new RegExp("^(\\d+)(?:-(\\d+))?.*", 'g');
@@ -42,27 +41,31 @@ function start(client) {
         console.log(message.from);
 
         if (message.body === 'Hi SMS X!') {
-            await client.sendText(message.from, '👋 Hello! I can help you manage WhatsApp groups. Here are some commands you can use:\n\n' +
+            await client.sendText(message.from, '👋 Hello! I can help you extract contacts from WhatsApp groups. Here are some commands you can use:\n\n' +
                 '#command - Get a list of all available commands\n' +
                 '#groups - Get a list of groups you share with me\n' +
-                '#group-<id> - Get the members list of a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n\n' +
-                'Add me to a group to get started!');
+                '#group-<id> - Extract contacts from a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n\n' +
+                'Add me to any group you want to extract contacts from. You don\'t need to be an admin!\n\n' +
+                'Note: This is a FREE service. I only respond to the exact commands listed above.');
         }
 
         if (message.body === '#help') {
-            await client.sendText(message.from, 'Here are some commands you can use:\n\n' +
+            await client.sendText(message.from, 'Here are the commands you can use:\n\n' +
                 '#command - Get a list of all available commands\n' +
                 '#groups - Get a list of groups you share with me\n' +
-                '#group-<id> - Get the members list of a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n\n' +
-                'Add me to a group to get started!');
+                '#group-<id> - Extract contacts from a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n\n' +
+                'Important: Commands must be typed EXACTLY as shown (case-sensitive).\n' +
+                'I\'ll only respond to these exact commands - all other messages are ignored.\n\n' +
+                'Add me to any group you want to extract contacts from!');
         }
 
         if (message.body === '#command') {    
             await client.sendText(message.from, 'Here are the commands you can use:\n\n' +
                 '#groups - Get a list of groups you share with me\n' +
-                '#group-<id> - Get the members list of a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n' +
+                '#group-<id> - Extract contacts from a specific group (e.g., #group-1234 - note: no space between #group and -1234)\n' +
                 '#help - Get help with commands\n\n' +
-                'Add me to a group to get started!');
+                'This is a FREE contact extraction service. You don\'t need to be a group admin to use it.\n' +
+                'Just add me to any group you want to extract contacts from!');
         }
 
         if (message.body === '#groups') {
@@ -82,9 +85,9 @@ function start(client) {
                     .join('\n');
 
                 await client.sendText(message.from, `Here are the groups you share with me:\n\n${data}\n\n` +
-                    'To get the members list of a group, send #group-<id> where <id> is the 4-letter code before the group name.\n' +
+                    'To extract contacts from a group, send #group-<id> where <id> is the 4-letter code before the group name.\n' +
                     'Important: There should be no space between #group and -<id>.\n' +
-                    'For example, if you want the members list of group "1234. Group Name", send #group-1234');
+                    'For example, to extract contacts from group "1234. Group Name", send #group-1234');
 
             } catch (error) {
                 await client.sendText(message.from, 'Failed to get groups. Please try again later.');
@@ -121,12 +124,15 @@ function start(client) {
                 }).filter(contact => contact.number !== null);
 
                 await csvWriter.writeRecords(records);
+
+                const regex = new RegExp("[^\\w\\s]", "g");
                 
-                await client.sendFile(message.from, filePath, sanitize(chat.name, { replacement: (char) => char.replace(/\W/g, '') }) + '-members.csv');
-                await client.sendText(message.from, `I've sent you a CSV file with all the members of "${chat.name}". You can open it in any spreadsheet program.`);
+                await client.sendFile(message.from, filePath, sanitize(chat.name).replace(regex, '') + '-members.csv');
+                await client.sendText(message.from, `I've sent you a CSV file with all the contact numbers from "${chat.name}". You can open it in any spreadsheet program or import it into SMSX.app for bulk messaging.`);
 
             } catch (error) {
-                await client.sendText(message.from, 'Failed to get members of the group. Please try again later.');
+                console.error('Error sending file:', error);
+                await client.sendText(message.from, 'Failed to extract contacts from the group. Please try again later.');
             } finally {
                 if (fs.existsSync(filePath)) {
                     fs.unlinkSync(filePath);
@@ -140,8 +146,7 @@ function start(client) {
     onDeath(() => {
 
         client.kill();
-        fs.rmdirSync(__dirname + "/chats/", { recursive: true });
-
+       
         process.exit(0);
     });
 
