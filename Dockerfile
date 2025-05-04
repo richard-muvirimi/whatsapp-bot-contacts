@@ -20,4 +20,4 @@ RUN mkdir -p -m 700 /usr/src/app/sessions
 
 RUN mkdir -p -m 700 /usr/src/app/chats
 
-ENTRYPOINT ["npm", "update", "&&", "/usr/bin/dumb-init", "--", "./start.sh", "index.js"]
+ENTRYPOINT ["/bin/sh", "-c", "npm update && /usr/bin/dumb-init -- ./start.sh index.js"]
