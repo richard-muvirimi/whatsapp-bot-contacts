@@ -68,7 +68,7 @@ function start(client) {
                 'Just add me to any group you want to extract contacts from!');
         }
 
-        if (message.body === '#groups') {
+        if (message.body === '#groups' || message.body === '#groups-all') {
             try {
                 const groups = await client.getAllGroups();
                 const shared = await Promise.all(
@@ -76,7 +76,7 @@ function start(client) {
                         const members = await client.getGroupMembers(group.id);
                         const senderPresent = members.find(contact => parseNumber(message.from).number === parseNumber(contact.id).number);
                         const botPresent = members.find(contact => contact.isMe);
-                        return senderPresent && botPresent ? group : null;
+                        return message.body === '#groups-all' || (senderPresent && botPresent) ? group : null;
                     })
                 ).then(groups => groups.filter(group => group !== null));
           
